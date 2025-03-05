@@ -1,95 +1,108 @@
-const config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  physics: {
-    default: 'arcade',
-    arcade: { gravity: { y: 500 } }
-  },
-  scene: {
-    preload: preload,
-    create: create,
-    update: update
-  },
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
-  }
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game variables
+let score = 0;
+let gameOver = false;
+const gravity = 0.5;
+const flapStrength = -10;
+const bitcoinSpeed = -2; // Speed at which bitcoins move left
+const bitcoinSpawnInterval = 2000; // Milliseconds between bitcoin spawns
+
+// Character (stock trader)
+const character = {
+    x: 100,
+    y: canvas.height / 2,
+    width: 50,
+    height: 50,
+    velocityY: 0,
+    image: new Image()
 };
+character.image.src = 'stock_trader.png'; // Replace with your stock trader image
 
-const game = new Phaser.Game(config);
+// Bitcoins
+const bitcoins = [];
+const bitcoinImage = new Image();
+bitcoinImage.src = 'bitcoin.png'; // Replace with your bitcoin image
 
-let player, bitcoins, score = 0, scoreText, background, trail;
+// Event listeners
+document.addEventListener('click', flap);
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') flap();
+});
 
-function preload() {
-  // Load the new images (replace with your uploaded file names and paths)
-  this.load.image('player', 'player.png');
-  this.load.image('bitcoin', 'bitcoin.png');
-  this.load.image('background', 'background.png');
+// Flap function
+function flap() {
+    if (!gameOver) {
+        character.velocityY = flapStrength;
+    }
 }
 
-function create() {
-  // Add and move the background to create a side-scrolling effect
-  background = this.add.image(0, 0, 'background');
-  background.setOrigin(0, 0);
-  background.displayWidth = this.sys.game.config.width;
-  background.displayHeight = this.sys.game.config.height;
-  background.setVelocityX(-200); // Move left at 200 pixels/second
-
-  // Add the player (Wall Street bets character) at starting position
-  player = this.physics.add.sprite(100, 300, 'player');
-  player.setCollideWorldBounds(true);
-  player.setScale(0.5); // Adjust scale for zoomed-out view and logo size
-
-  // Initialize Bitcoin group
-  bitcoins = this.physics.add.group();
-
-  // Add score text
-  scoreText = this.add.text(16, 16, 'Bitcoins: 0', { fontSize: '20px', fill: '#fff' });
-
-  // Add trailing stock chart line
-  trail = this.add.graphics();
-  player.path = [];
-
-  // Tap to go up
-  this.input.on('pointerdown', () => player.setVelocityY(-200));
+// Spawn bitcoins
+function spawnBitcoin() {
+    const bitcoin = {
+        x: canvas.width,
+        y: Math.random() * (canvas.height - 50),
+        width: 30,
+        height: 30
+    };
+    bitcoins.push(bitcoin);
 }
 
-function update() {
-  // Move background to maintain side-scrolling
-  if (background.x < -background.displayWidth) {
-    background.x = 0;
-  }
+// Game loop
+function gameLoop() {
+    if (gameOver) return;
 
-  // Update and draw the stock chart trail
-  player.path.push({ x: player.x, y: player.y });
-  if (player.path.length > 100) player.path.shift(); // Limit trail length
-  trail.clear();
-  trail.lineStyle(2, 0xffffff); // White line for stock chart
-  trail.beginPath();
-  trail.moveTo(player.x, player.y);
-  for (let point of player.path) trail.lineTo(point.x, point.y);
-  trail.closePath();
-  trail.strokePath();
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Spawn Bitcoins at the right edge, moving left with the background
-  if (Math.random() < 0.02) {
-    let bitcoin = bitcoins.create(800, Math.random() * 550 + 50, 'bitcoin');
-    bitcoin.setVelocityX(-200); // Sync with background speed
-  }
+    // Update character position
+    character.velocityY += gravity;
+    character.y += character.velocityY;
 
-  // Check for collisions with Bitcoins
-  this.physics.overlap(player, bitcoins, collectBitcoin, null, this);
+    // Draw character
+    ctx.drawImage(character.image, character.x, character.y, character.width, character.height);
 
-  // Reset if player falls off bottom
-  if (player.y > 600) {
-    this.scene.restart();
-    score = 0;
-  }
+    // Check for ground collision
+    if (character.y + character.height >= canvas.height) {
+        gameOver = true;
+        alert(`Game Over! Score: ${score}`);
+    }
+
+    // Update and draw bitcoins
+    bitcoins.forEach((bitcoin, index) => {
+        bitcoin.x += bitcoinSpeed;
+
+        // Draw bitcoin
+        ctx.drawImage(bitcoinImage, bitcoin.x, bitcoin.y, bitcoin.width, bitcoin.height);
+
+        // Check for collection
+        if (
+            character.x < bitcoin.x + bitcoin.width &&
+            character.x + character.width > bitcoin.x &&
+            character.y < bitcoin.y + bitcoin.height &&
+            character.y + character.height > bitcoin.y
+        ) {
+            score++;
+            bitcoins.splice(index, 1);
+        }
+
+        // Remove bitcoin if off screen
+        if (bitcoin.x + bitcoin.width < 0) {
+            bitcoins.splice(index, 1);
+        }
+    });
+
+    // Draw score
+    ctx.fillStyle = 'black';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Score: ${score}`, 10, 30);
+
+    requestAnimationFrame(gameLoop);
 }
 
-function collectBitcoin(player, bitcoin) {
-  bitcoin.destroy();
-  score += 1;
-  scoreText.setText('Bitcoins: ' + score);
-}
+// Start spawning bitcoins
+setInterval(spawnBitcoin, bitcoinSpawnInterval);
+
+// Start game loop
+gameLoop();
