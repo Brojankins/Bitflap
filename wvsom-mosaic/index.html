@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Journey Takes Shape</title>
+  <meta name="description" content="A dimensional mosaic film following a medical student's journey at the West Virginia School of Osteopathic Medicine.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #f4ecd8;
+      --gold: #e0b447;
+      --bg: #050407;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; }
+    body { font-family: Montserrat, "Helvetica Neue", Arial, sans-serif; }
+    #frame { position: fixed; inset: 0; display: grid; place-items: center; }
+    #stage { position: relative; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; background: var(--bg); overflow: hidden; }
+    #stage canvas { display: block; width: 100%; height: 100%; }
+
+    /* opening card */
+    #intro { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; background: radial-gradient(ellipse at center, rgba(20,16,12,0.55), rgba(5,4,7,0.92)); transition: opacity 1.2s ease; z-index: 3; }
+    body.playing #intro { opacity: 0; pointer-events: none; }
+    #intro h1 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: clamp(22px, 3.2vw, 44px); letter-spacing: 0.04em; margin: 0 0 0.4em; }
+    #intro p { font-size: clamp(10px, 0.95vw, 13px); letter-spacing: 0.32em; text-transform: uppercase; color: #bfae8a; margin: 0 0 2.2em; }
+    button { font: 600 12px/1 Montserrat, sans-serif; letter-spacing: 0.3em; text-transform: uppercase; color: var(--bg); background: var(--gold); border: 0; padding: 14px 26px 14px 30px; border-radius: 2px; cursor: pointer; box-shadow: 0 6px 30px rgba(224,180,71,0.25); }
+    button:hover { background: #f2c96a; }
+    button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+    /* end card */
+    #endcard { position: absolute; left: 0; right: 0; bottom: 7%; text-align: center; pointer-events: none; z-index: 2; }
+    #endcard::before { content: ""; position: absolute; left: 0; right: 0; bottom: -40%; height: 260%; background: linear-gradient(to top, rgba(5,4,7,0.85), rgba(5,4,7,0)); opacity: 0; transition: opacity 2.4s ease; z-index: -1; }
+    #endcard .name, #endcard .line { opacity: 0; transform: translateY(10px); filter: blur(6px); transition: opacity 2.2s ease, transform 2.2s ease, filter 2.2s ease; }
+    #endcard .name { font-family: Montserrat, sans-serif; font-weight: 600; font-size: clamp(10px, 1.45vw, 20px); letter-spacing: 0.38em; padding-left: 0.38em; }
+    #endcard .rule { width: 0; height: 1px; margin: 1.1em auto; background: var(--gold); transition: width 2.4s ease 0.8s; }
+    #endcard .line { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 500; font-size: clamp(16px, 2.5vw, 36px); color: #f6dfa0; transition-delay: 1.4s; }
+    #endcard.on::before { opacity: 1; }
+    body.capture #endcard *, body.capture #endcard::before { transition: none !important; }
+    body.capture #endcard::before { opacity: var(--shade, 0); }
+    #endcard.on .name, #endcard.on .line { opacity: 1; transform: none; filter: none; }
+    #endcard.on .rule { width: min(260px, 22%); }
+
+    /* controls */
+    #ui { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px 12px; display: flex; gap: 14px; align-items: center; font-size: 11px; letter-spacing: 0.12em; color: rgba(244,236,216,0.7); opacity: 0; transition: opacity 0.6s; z-index: 4; }
+    #ui.awake { opacity: 1; }
+    body.clean #ui { display: none; }
+    #bar { flex: 1; height: 2px; background: rgba(255,255,255,0.14); }
+    #scrub { height: 100%; width: 0; background: var(--gold); }
+    #replay { display: none; position: absolute; right: 24px; top: 20px; z-index: 5; padding: 10px 16px 10px 20px; }
+    body.ended #replay { display: block; }
+    body.clean #replay { display: none; }
+    @media (max-width: 600px) { #ui .keys { display: none; } }
+  </style>
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <div id="frame">
+    <div id="stage">
+      <div id="intro">
+        <div>
+          <h1>Your journey takes shape here.</h1>
+          <p>A mosaic film &middot; West Virginia School of Osteopathic Medicine</p>
+          <button id="begin" type="button">Begin</button>
+        </div>
+      </div>
+      <div id="endcard" aria-live="polite">
+        <div class="name">WEST VIRGINIA SCHOOL OF OSTEOPATHIC MEDICINE</div>
+        <div class="rule"></div>
+        <div class="line">Your journey takes shape here.</div>
+      </div>
+      <button id="replay" type="button">Replay</button>
+      <div id="ui">
+        <div id="bar"><div id="scrub"></div></div>
+        <span class="keys">space pause &middot; &larr;&rarr; seek &middot; R restart &middot; F fullscreen &middot; H hide</span>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
