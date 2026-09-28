@@ -134,7 +134,7 @@ export default {
       g.save();
       const nightK = seg(t, B.night[0], B.night[1], ease.inOutSine);
       // relief map with the campus sitting at Lewisburg, pulling back
-      const z = lerp(30, 1, ease.inOutExpo(rise));
+      const z = lerp(12, 1, ease.inOutCubic(rise));
       withCam(g, { x: lerp(L[0], 960, rise), y: lerp(L[1], 540, rise), z }, () => {
         fill(g, C.paper);
         reliefMap(g, seg(t, B.rise[0], B.rise[0] + 0.8));

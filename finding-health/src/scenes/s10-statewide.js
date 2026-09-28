@@ -214,7 +214,7 @@ export default {
     // 1. pull rapidly up from the campus
     const up = seg(t, B.pullup[0], B.pullup[1], ease.inOutExpo);
     const mapA = 1 - seg(t, B.fly[0] - 0.3, B.fly[0] + 0.3) + seg(t, B.network[0], B.network[0] + 0.5);
-    const z = kf(t, [[0, 30], [B.pullup[1], 1.0, ease.inOutExpo], [B.fly[0], 1.3, ease.inOutSine], [B.network[0], 1.3], [B.network[0] + 0.8, 1.0, ease.house], [B.dive[0], 1.05], [B.dive[1], 40, ease.inExpo]]);
+    const z = kf(t, [[0, 30], [B.pullup[1], 1.0, ease.inOutExpo], [B.fly[0], 1.3, ease.inOutSine], [B.network[0], 1.3], [B.network[0] + 0.8, 1.0, ease.house], [B.dive[0], 1.05], [B.dive[1], 9, ease.inCubic]]);
     const CHS = P([-81.63, 38.35]);
     const focus = t < B.dive[0] ? LEW : [lerp(LEW[0], CHS[0], seg(t, B.dive[0], B.dive[0] + 0.5, ease.inOutSine)), lerp(LEW[1], CHS[1], seg(t, B.dive[0], B.dive[0] + 0.5, ease.inOutSine))];
     const fx = lerp(focus[0], 960, seg(t, 0.4, B.pullup[1], ease.inOutSine) * (t < B.dive[0] ? 1 : 1 - seg(t, B.dive[0], B.dive[0] + 0.5)));
@@ -240,7 +240,7 @@ export default {
     const flyA = env(t, B.fly[0] - 0.3, B.fly[0] + 0.4, B.fly[1] - 0.2, B.network[0] + 0.4);
     flyover(g, t, flyA);
     // 3. into a hospital: its light becomes the corridor
-    const dv = seg(t, B.dive[1] - 0.5, B.dive[1], ease.inCubic);
+    const dv = seg(t, B.dive[0] + 0.3, B.dive[1] - 0.1, ease.inOutSine);
     if (dv > 0) { g.fillStyle = rgba('#e9e3d6', dv); g.fillRect(0, 0, W, H); }
     caps(g, 'STATEWIDE CAMPUS', 960, 1010, { size: 16, color: C.graphite, tracking: 0.7, alpha: env(t, 2.4, 3.0, 4.0, 4.4) });
     void fbm; void font; void TAU;
