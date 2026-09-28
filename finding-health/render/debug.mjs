@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
+const ROOT = process.cwd();
+const srv = http.createServer((q, r) => { const p = path.join(ROOT, q.url.split('?')[0]); if (!fs.existsSync(p)) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'content-type': p.endsWith('.js') ? 'text/javascript' : p.endsWith('.html') ? 'text/html' : 'application/octet-stream' }); fs.createReadStream(p).pipe(r); }).listen(0);
+const b = await chromium.launch(); const pg = await b.newPage();
+pg.on('pageerror', e => console.log('ERR', e.message)); pg.on('console', m => console.log('LOG', m.text()));
+await pg.goto(`http://localhost:${srv.address().port}/index.html?render=1&scale=0.5`);
+await pg.waitForFunction('window.FH_READY === true');
+const res = await pg.evaluate((f) => { try { const r = FH.draw(f); const c = document.getElementById("stage").getContext("2d"); return [r, [...c.getImageData(300, 350, 1, 1).data], [...c.getImageData(750, 185, 1, 1).data]]; } catch (e) { return 'THROW ' + e.message + e.stack; } }, parseInt(process.argv[2]));
+console.log(res); await b.close(); srv.close();

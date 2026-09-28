@@ -1,0 +1,17 @@
+{
+  "name": "finding-health",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FINDING HEALTH — a code-driven, frame-accurate motion-design short film for the West Virginia School of Osteopathic Medicine.",
+  "scripts": {
+    "preview": "http-server -c-1 -p 8080 .",
+    "stills": "node render/render.mjs stills --scenes --scale 0.5",
+    "audio": "node audio/score.mjs out/score.wav",
+    "draft": "npm run audio && node render/render.mjs video --scale 0.5 --out out/finding-health-draft.mp4 --audio out/score.wav",
+    "final": "npm run audio && node render/render.mjs video --scale 1 --workers 4 --out out/finding-health-1080p.mp4 --audio out/score.wav"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
